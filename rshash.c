@@ -158,7 +158,7 @@ __rshash_find(const rshash_t* h, const void* key, size_t len)
 {
   size_t m = h->cap - 1;
   uint32_t pos = rshash_hash(key, len);
-  struct rshash_row* row = h->table[m&pos];
+  struct rshash_row* row = h->table[m&pos]; // TODO valgrind is upset here
 
   while (1) {
     if (row == NULL || __byte_compare(row->key, key, len))
@@ -221,6 +221,8 @@ __rshash_resize(rshash_t* h, size_t newsize)
     return;
 
   size_t l = rshash_size(h);
+
+  /* save all occupied rows */
   size_t c = 0;
   struct rshash_row rows[l];
   for (size_t i = 0; c < h->cap; i++) {
@@ -228,6 +230,7 @@ __rshash_resize(rshash_t* h, size_t newsize)
       rows[c].key = h->table[i]->key;
       rows[c].len = h->table[i]->len;
       rows[c].value = h->table[i]->value;
+      c++;
     }
   }
 
@@ -248,11 +251,6 @@ __rshash_resize(rshash_t* h, size_t newsize)
   /* fill new table */
   for (size_t i = 0; i < l; i++)
     rshash_add(h, rows[i].key, rows[i].len, rows[i].value);
-
-  if (rshash_size(h) != l) {
-    fprintf(stderr, "bug: hash table inconsistency after resizing\n");
-    exit(1);
-  }
 }
 
 

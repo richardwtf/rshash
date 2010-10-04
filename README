@@ -1,0 +1,40 @@
+This module should be pretty easy to use. Consider the following tiny
+example, and look for more functions in rshash.h.
+
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "rshash.h"
+
+int main() {
+  rshash_t* hash = rshash_init(NULL, free);
+
+  char* keys[2] = {"foo", "bar"};
+  int* values[2] = {0};
+
+  values[0] = (int*)malloc(sizeof(int));
+  *values[0] = 101;
+  values[1] = (int*)malloc(sizeof(int));
+  *values[1] = 102;
+
+  rshash_add(hash, keys[0], strlen(keys[0]), values[0]); // -> true
+  rshash_add(hash, keys[1], strlen(keys[1]), values[1]); // -> true
+
+  rshash_has(hash, keys[0], strlen(keys[0])); // -> true
+
+  rshash_get(hash, "baz", strlen("baz")); // -> NULL
+
+  rshash_iterator_t* it = rshash_iterator(hash);
+  while (rshash_iterator_next(it)) {
+    char* key = (char*)rshash_iterator_key(it);
+    int* value = (int*)rshash_iterator_value(it);
+
+    printf("%s: %d\n", key, *value);
+  }
+  free(it);
+
+  rshash_free(hash);
+
+  return EXIT_SUCCESS;
+}
